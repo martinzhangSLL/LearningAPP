@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>错题整理 APP 真机交互原型</title>
+  <style>
+    :root {
+      --bg-1: #09111b;
+      --bg-2: #102238;
+      --panel: rgba(14, 24, 37, 0.78);
+      --panel-2: rgba(21, 36, 54, 0.82);
+      --line: rgba(255, 255, 255, 0.08);
+      --line-2: rgba(255, 255, 255, 0.12);
+      --text: #f1f7ff;
+      --muted: #9eb4ce;
+      --dark: #13233a;
+      --card: rgba(255, 255, 255, 0.82);
+      --paper: #f7f2e7;
+      --teal: #69d6c5;
+      --teal-deep: #103f45;
+      --orange: #ff9d72;
+      --gold: #f4d475;
+      --danger: #ff7c87;
+      --success: #72d595;
+      --shadow: 0 26px 80px rgba(0, 0, 0, 0.34);
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "MiSans", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 18%, rgba(105, 214, 197, 0.2), transparent 26%),
+        radial-gradient(circle at 84% 12%, rgba(255, 157, 114, 0.16), transparent 23%),
+        radial-gradient(circle at 76% 78%, rgba(244, 212, 117, 0.14), transparent 22%),
+        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 48%, #08111a 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.05;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.16) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.16) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+    }
+
+    .layout {
+      width: min(1460px, calc(100% - 40px));
+      margin: 24px auto 40px;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .sidebar,
+    .stage {
+      background: var(--panel);
+      backdrop-filter: blur(24px);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 24px;
+      height: calc(100vh - 48px);
+      overflow: auto;
+      border-radius: var(--radius-xl);
+      padding: 24px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .brand-mark {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #6ae1d0 0%, #73a4ff 100%);
+      color: #092230;
+      font-size: 24px;
+      font-weight: 900;
+      box-shadow: 0 18px 34px rgba(68, 146, 173, 0.26);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1.05;
+    }
+
+    .brand p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .summary {
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .summary strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .summary p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .section-head {
+      margin: 22px 0 10px;
+      font-size: 11px;
+      color: #b7cae2;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .step-list,
+    .tips,
+    .notes {
+      display: grid;
+      gap: 10px;
+    }
+
+    .step,
+    .tip,
+    .note {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .step.active {
+      border-color: rgba(105,214,197,0.36);
+      background: linear-gradient(135deg, rgba(105,214,197,0.14), rgba(255,157,114,0.09));
+    }
+
+    .step small,
+    .tip small,
+    .note small {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 11px;
+      color: #8da2bc;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .step strong,
+    .tip strong,
+    .note strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .step p,
+    .tip p,
+    .note p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .metric {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 23px;
+      margin-bottom: 4px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .stage {
+      border-radius: 34px;
+      min-height: calc(100vh - 48px);
+      padding: 28px;
+    }
+
+    .stage-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 22px;
+    }
+
+    .stage-top h2 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+    }
+
+    .stage-top p {
+      margin: 12px 0 0;
+      max-width: 780px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .mode-pill {
+      padding: 12px 16px;
+      white-space: nowrap;
+      border-radius: 999px;
+      border: 1px solid rgba(105,214,197,0.34);
+      color: #d7fff8;
+      background: rgba(105,214,197,0.09);
+      font-size: 12px;
+    }
+
+    .stage-grid {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr) 290px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border-radius: 26px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--panel-2);
+      backdrop-filter: blur(18px);
+      padding: 18px;
+    }
+
+    .panel h3 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      color: #eff7ff;
+    }
+
+    .panel p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .journey {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .journey button {
+      width: 100%;
+      text-align: left;
+      padding: 14px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+    }
+
+    .journey button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(105,214,197,0.34);
+    }
+
+    .journey button.active {
+      background: linear-gradient(135deg, rgba(105,214,197,0.14), rgba(255,157,114,0.1));
+      border-color: rgba(105,214,197,0.36);
+    }
+
+    .journey button small {
+      display: block;
+      margin-bottom: 5px;
+      color: #91a7c2;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-size: 10px;
+    }
+
+    .journey button strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .journey button span {
+      display: block;
+      margin-top: 7px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .phone-wrap {
+      display: flex;
+      justify-content: center;
+    }
+
+    .phone-shell {
+      width: 410px;
+      min-height: 840px;
+      padding: 14px;
+      border-radius: 40px;
+      background: #0d1724;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow:
+        0 40px 90px rgba(0,0,0,0.44),
+        inset 0 0 0 1px rgba(255,255,255,0.04);
+      position: relative;
+    }
+
+    .phone-shell::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 122px;
+      height: 26px;
+      border-radius: 999px;
+      background: #08111a;
+      border: 1px solid rgba(255,255,255,0.06);
+      z-index: 8;
+    }
+
+    .app-screen {
+      min-height: 810px;
+      border-radius: 30px;
+      overflow: hidden;
+      position: relative;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(105,214,197,0.17), transparent 34%),
+        linear-gradient(180deg, #edf5fb 0%, #f6f1e7 100%);
+      color: var(--dark);
+    }
+
+    .status-bar {
+      padding: 12px 18px 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .screen-top {
+      padding: 14px 18px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .screen-top h3 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.08;
+    }
+
+    .screen-top p {
+      margin: 7px 0 0;
+      font-size: 12px;
+      line-height: 1.55;
+      color: rgba(19,35,58,0.68);
+    }
+
+    .screen-body {
+      padding: 12px 18px 108px;
+      animation: fadeUp 0.28s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .badge {
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(19,35,58,0.07);
+      border: 1px solid rgba(19,35,58,0.08);
+      font-size: 11px;
+      color: rgba(19,35,58,0.7);
+      white-space: nowrap;
+    }
+
+    .hero {
+      border-radius: 24px;
+      padding: 18px;
+      color: #f7fcff;
+      background: linear-gradient(135deg, #16314c 0%, #22506d 56%, #327182 100%);
+      box-shadow: 0 20px 32px rgba(19,35,58,0.16);
+    }
+
+    .hero strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 29px;
+      line-height: 1.06;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: rgba(245,251,255,0.8);
+      line-height: 1.55;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .soft-card,
+    .list-card,
+    .sheet-card,
+    .task-card,
+    .question-card,
+    .profile-card,
+    .mini-panel {
+      background: var(--card);
+      border: 1px solid rgba(19,35,58,0.08);
+      border-radius: 20px;
+      box-shadow: 0 10px 26px rgba(19,35,58,0.08);
+    }
+
+    .soft-card {
+      padding: 14px;
+    }
+
+    .soft-card strong {
+      display: block;
+      margin-top: 10px;
+      font-size: 15px;
+    }
+
+    .soft-card p {
+      margin: 7px 0 0;
+      color: rgba(19,35,58,0.66);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .chip,
+    .tag,
+    .tiny-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      line-height: 1;
+    }
+
+    .chip {
+      background: rgba(19,35,58,0.06);
+      color: rgba(19,35,58,0.8);
+    }
+
+    .chip.active {
+      background: rgba(105,214,197,0.18);
+      color: #165a55;
+      font-weight: 700;
+    }
+
+    .tag {
+      background: rgba(255,255,255,0.12);
+      color: #effbff;
+    }
+
+    .tiny-pill {
+      background: rgba(19,35,58,0.08);
+      color: rgba(19,35,58,0.7);
+    }
+
+    .section-title {
+      margin: 18px 0 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .section-title h4 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .section-title span {
+      color: rgba(19,35,58,0.56);
+      font-size: 11px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .list-card,
+    .sheet-card,
+    .task-card,
+    .question-card,
+    .profile-card,
+    .mini-panel {
+      padding: 14px;
+    }
+
+    .list-card strong,
+    .sheet-card strong,
+    .task-card strong,
+    .question-card strong,
+    .profile-card strong,
+    .mini-panel strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .list-card p,
+    .sheet-card p,
+    .task-card p,
+    .question-card p,
+    .profile-card p,
+    .mini-panel p {
+      margin: 7px 0 0;
+      color: rgba(19,35,58,0.66);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .tags {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .preview-sheet {
+      position: relative;
+      height: 360px;
+      border-radius: 24px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(19,35,58,0.96), rgba(12,23,36,0.96));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+
+    .preview-paper {
+      position: absolute;
+      inset: 22px;
+      background: linear-gradient(180deg, #fdfaf4 0%, #f1e9dd 100%);
+      border-radius: 18px;
+      box-shadow: 0 18px 34px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+
+    .preview-paper::before {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      background: linear-gradient(rgba(19,35,58,0.06) 1px, transparent 1px);
+      background-size: 100% 38px;
+      opacity: 0.6;
+    }
+
+    .candidate {
+      position: absolute;
+      border-radius: 18px;
+      border: 2px solid;
+      background: rgba(255,255,255,0.08);
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+    }
+
+    .candidate:hover {
+      transform: translateY(-1px) scale(1.01);
+    }
+
+    .candidate.selected {
+      border-color: var(--teal);
+      background: rgba(105,214,197,0.18);
+      box-shadow: 0 0 0 3px rgba(105,214,197,0.14);
+    }
+
+    .candidate.pending {
+      border-color: var(--gold);
+      background: rgba(244,212,117,0.14);
+    }
+
+    .candidate.manual {
+      border-color: var(--orange);
+      background: rgba(255,157,114,0.16);
+      border-style: dashed;
+    }
+
+    .candidate-label {
+      position: absolute;
+      top: -13px;
+      left: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #fff5d9;
+      color: #173247;
+      font-size: 10px;
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+    }
+
+    .tool-row,
+    .action-row,
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .tool-btn,
+    .primary-btn,
+    .secondary-btn,
+    .mini-btn,
+    .tab-chip {
+      border: none;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+    }
+
+    .tool-btn:hover,
+    .primary-btn:hover,
+    .secondary-btn:hover,
+    .mini-btn:hover,
+    .tab-chip:hover {
+      transform: translateY(-1px);
+    }
+
+    .tool-btn,
+    .secondary-btn,
+    .mini-btn,
+    .tab-chip {
+      background: rgba(19,35,58,0.08);
+      color: rgba(19,35,58,0.76);
+    }
+
+    .tool-btn,
+    .mini-btn,
+    .tab-chip {
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #18334f 0%, #1e6f6b 100%);
+      color: #f4ffff;
+      box-shadow: 0 12px 20px rgba(25,47,71,0.16);
+    }
+
+    .secondary-btn {
+      background: rgba(19,35,58,0.08);
+      color: rgba(19,35,58,0.74);
+    }
+
+    .form-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field {
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.84);
+      border: 1px solid rgba(19,35,58,0.08);
+      box-shadow: 0 10px 22px rgba(19,35,58,0.06);
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: rgba(19,35,58,0.52);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+
+    .field .value {
+      font-size: 13px;
+      line-height: 1.65;
+      color: #13233a;
+    }
+
+    .review-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .review-row {
+      display: grid;
+      grid-template-columns: 46px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.84);
+      border: 1px solid rgba(19,35,58,0.08);
+    }
+
+    .review-badge {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 14px;
+      color: #103246;
+      background: linear-gradient(135deg, rgba(105,214,197,0.54), rgba(244,212,117,0.66));
+    }
+
+    .review-row strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .review-row p {
+      margin: 4px 0 0;
+      font-size: 11px;
+      color: rgba(19,35,58,0.62);
+    }
+
+    .feedback-sheet,
+    .camera-sheet,
+    .detail-sheet {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 86px;
+      padding: 16px;
+      border-radius: 24px;
+      background: rgba(247, 244, 237, 0.98);
+      border: 1px solid rgba(19,35,58,0.08);
+      box-shadow: 0 24px 40px rgba(0,0,0,0.18);
+      color: var(--dark);
+      transform: translateY(120%);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.24s ease, opacity 0.24s ease;
+      z-index: 5;
+    }
+
+    .feedback-sheet.active,
+    .camera-sheet.active,
+    .detail-sheet.active {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sheet-handle {
+      width: 54px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(19,35,58,0.14);
+      margin: 0 auto 14px;
+    }
+
+    .sheet-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .sheet-actions button {
+      padding: 10px 8px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(19,35,58,0.07);
+      color: rgba(19,35,58,0.76);
+    }
+
+    .sheet-actions button.primary {
+      background: rgba(105,214,197,0.18);
+      color: #165751;
+    }
+
+    .sheet-actions button.warn {
+      background: rgba(255,157,114,0.18);
+      color: #8f4632;
+    }
+
+    .bottombar {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      padding: 12px 8px 10px;
+      border-radius: 22px;
+      background: rgba(9, 18, 29, 0.94);
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+      z-index: 4;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.72);
+      font-size: 10px;
+      line-height: 1.25;
+      padding: 4px 2px;
+      cursor: pointer;
+      opacity: 0.72;
+      transition: opacity 0.16s ease, transform 0.16s ease, color 0.16s ease;
+    }
+
+    .tab-btn.active {
+      opacity: 1;
+      color: #aef4e9;
+      transform: translateY(-1px);
+    }
+
+    .tab-btn.capture {
+      color: #102339;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6ae1d0, #ffb08d);
+      border-radius: 16px;
+      padding: 10px 4px;
+      opacity: 1;
+    }
+
+    .right-info .mini-panel + .mini-panel {
+      margin-top: 12px;
+    }
+
+    .prototype-flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .prototype-flow span {
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: rgba(255,255,255,0.05);
+      color: #d8e8fa;
+    }
+
+    .toast {
+      position: absolute;
+      top: 70px;
+      left: 50%;
+      transform: translate(-50%, -16px);
+      min-width: 220px;
+      max-width: calc(100% - 48px);
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: rgba(12, 23, 36, 0.88);
+      color: #f3fcff;
+      font-size: 12px;
+      text-align: center;
+      box-shadow: 0 18px 30px rgba(0,0,0,0.22);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.22s ease, opacity 0.22s ease;
+      z-index: 6;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .empty-state {
+      padding: 22px 18px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.82);
+      border: 1px solid rgba(19,35,58,0.08);
+      text-align: center;
+    }
+
+    .empty-state strong {
+      display: block;
+      font-size: 16px;
+      color: #13233a;
+    }
+
+    .empty-state p {
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: rgba(19,35,58,0.64);
+      line-height: 1.6;
+    }
+
+    .profile-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    @media (max-width: 1320px) {
+      .stage-grid {
+        grid-template-columns: 280px minmax(0, 1fr);
+      }
+
+      .right-info {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 1160px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+      }
+    }
+
+    @media (max-width: 840px) {
+      .stage {
+        padding: 18px;
+      }
+
+      .stage-top {
+        flex-direction: column;
+      }
+
+      .stage-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .phone-shell {
+        width: 100%;
+        max-width: 420px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">错</div>
+        <div>
+          <h1>真机交互原型</h1>
+          <p>可点击演示版 · 错题整理 APP</p>
+        </div>
+      </div>
+
+      <div class="summary">
+        <strong>这版升级内容</strong>
+        <p>把静态页面稿升级成可点击交互原型。你可以在手机界面内完成页面切换、候选框选择、保存错题、打开复习反馈弹层，以及查看相似题巩固流程。</p>
+      </div>
+
+      <div class="section-head">演示主线</div>
+      <div class="step-list" id="storySteps">
+        <div class="step active">
+          <small>Step 1</small>
+          <strong>从首页进入拍照整理</strong>
+          <p>点击首页“去整理新错题”或底部中间拍照按钮。</p>
+        </div>
+        <div class="step">
+          <small>Step 2</small>
+          <strong>确认真正的错题</strong>
+          <p>点击候选框选择或取消选中，模拟删除误框和人工补框。</p>
+        </div>
+        <div class="step">
+          <small>Step 3</small>
+          <strong>编辑并保存到错题本</strong>
+          <p>在编辑页切换学科、错误类型与知识点后保存。</p>
+        </div>
+        <div class="step">
+          <small>Step 4</small>
+          <strong>进入每日复习与巩固</strong>
+          <p>在复习页点击题目，弹出掌握反馈，再进入相似题练习。</p>
+        </div>
+      </div>
+
+      <div class="section-head">设计说明</div>
+      <div class="tips">
+        <div class="tip">
+          <small>交互定位</small>
+          <strong>更像真机，而不是翻页稿</strong>
+          <p>保留手机壳、状态栏、底部导航和弹层反馈，让演示更接近真实产品体验。</p>
+        </div>
+        <div class="tip">
+          <small>业务重点</small>
+          <strong>只整理错题</strong>
+          <p>自动框选只是候选结果，用户确认后的内容才进入识别和入库流程。</p>
+        </div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <strong>6</strong>
+          <span>核心页面可切换</span>
+        </div>
+        <div class="metric">
+          <strong>4</strong>
+          <span>关键交互已串联</span>
+        </div>
+        <div class="metric">
+          <strong>P0</strong>
+          <span>围绕 MVP 主流程</span>
+        </div>
+        <div class="metric">
+          <strong>可演示</strong>
+          <span>适合汇报和评审</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="stage">
+      <div class="stage-top">
+        <div>
+          <h2>更像真机的交互原型</h2>
+          <p>这版原型通过真实页面流转、底部导航、候选题框选、表单编辑、底部弹层和保存反馈，模拟了“整理错题 -> 保存 -> 复习 -> 巩固”的完整体验。建议你直接在手机壳中点击演示主流程。</p>
+        </div>
+        <div class="mode-pill">Interactive Prototype · Mobile App Flow</div>
+      </div>
+
+      <div class="stage-grid">
+        <section class="panel">
+          <h3>快速跳转</h3>
+          <p>可直接切到任意页面，也可以在手机里按真实路径操作。</p>
+          <div class="journey" id="journeyNav">
+            <button class="active" data-route="home">
+              <small>01</small>
+              <strong>首页总览</strong>
+              <span>今日复习、最近错题、快速拍照入口。</span>
+            </button>
+            <button data-route="capture">
+              <small>02</small>
+              <strong>候选切分确认</strong>
+              <span>选择真正的错题，并模拟补框与重画。</span>
+            </button>
+            <button data-route="edit">
+              <small>03</small>
+              <strong>错题编辑页</strong>
+              <span>系统预填，用户做最终确认与修改。</span>
+            </button>
+            <button data-route="notebook">
+              <small>04</small>
+              <strong>错题本</strong>
+              <span>错题管理、筛选、查看详情与继续巩固。</span>
+            </button>
+            <button data-route="review">
+              <small>05</small>
+              <strong>每日复习</strong>
+              <span>点击题目可弹出掌握反馈，模拟复习完成。</span>
+            </button>
+            <button data-route="profile">
+              <small>06</small>
+              <strong>我的 / 数据</strong>
+              <span>展示学习数据、偏好和近期表现。</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="phone-wrap">
+          <div class="phone-shell">
+            <div class="app-screen">
+              <div class="toast" id="toast"></div>
+              <div id="app"></div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel right-info">
+          <h3>当前页面说明</h3>
+          <p id="pageDesc">首页强调“今天做什么”，降低首次打开后的选择成本。</p>
+          <div class="prototype-flow">
+            <span>候选切分</span>
+            <span>用户确认错题</span>
+            <span>AI 结构化整理</span>
+            <span>每日复习</span>
+            <span>相似题巩固</span>
+          </div>
+
+          <div class="mini-panel" style="margin-top: 14px;">
+            <strong>推荐演示顺序</strong>
+            <p>首页 -> 去整理新错题 -> 确认候选框 -> 继续识别 -> 保存到错题本 -> 去今日复习 -> 点开题目反馈 -> 查看相似题。</p>
+          </div>
+
+          <div class="mini-panel">
+            <strong>交互亮点</strong>
+            <p>本次重点增强底部弹层、选框状态变化、页面流转反馈和导航一致性，更适合作为“真机演示稿”。</p>
+          </div>
+
+          <div class="mini-panel">
+            <strong>产品原则</strong>
+            <p>自动识别只做提效，不做最终拍板。所有高风险结果都保留人工确认与编辑入口。</p>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      route: "home",
+      captureSelected: [1, 3],
+      manualBox: false,
+      subject: "数学",
+      errorType: "概念错误",
+      reviewSheetOpen: false,
+      captureSheetOpen: false,
+      detailSheetOpen: false,
+      activeReview: null,
+      stats: {
+        total: 128,
+        todayReview: 6,
+        mastered: 87,
+        streak: 9
+      }
+    };
+
+    const routeDescription = {
+      home: "首页强调“今天做什么”，把整理入口和复习任务放在一个界面中。",
+      capture: "候选切分页是产品核心：用户只确认真正的错题，而不是识别整页全部题目。",
+      edit: "错题编辑页承接 AI 预填结果，支持快速修正并保存到错题本。",
+      notebook: "错题本负责长期沉淀和二次回看，是产品留存的重要页面。",
+      review: "每日复习页把整理行为转化成持续学习行为，并通过反馈按钮更新掌握状态。",
+      profile: "个人页更适合展示连续使用结果，强化长期价值与学习成就感。"
+    };
+
+    const app = document.getElementById("app");
+    const pageDesc = document.getElementById("pageDesc");
+    const journeyButtons = [...document.querySelectorAll("#journeyNav button")];
+    const stepItems = [...document.querySelectorAll("#storySteps .step")];
+
+    function showToast(text) {
+      const toast = document.getElementById("toast");
+      toast.textContent = text;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function setRoute(route) {
+      state.route = route;
+      state.reviewSheetOpen = false;
+      state.captureSheetOpen = false;
+      state.detailSheetOpen = false;
+      state.activeReview = null;
+      render();
+    }
+
+    function updateStorySteps() {
+      const indexMap = { home: 0, capture: 1, edit: 2, notebook: 2, review: 3, profile: 3 };
+      const current = indexMap[state.route] ?? 0;
+      stepItems.forEach((el, idx) => el.classList.toggle("active", idx === current));
+    }
+
+    function renderHome() {
+      return `
+        <div class="status-bar"><span>9:41</span><span>5G · 87%</span></div>
+        <div class="screen-top">
+          <div>
+            <h3>晚上好，小林</h3>
+            <p>今天还有 ${state.stats.todayReview} 道错题待复习，建议先整理后复习。</p>
+          </div>
+          <div class="badge">数学优先</div>
+        </div>
+        <div class="screen-body">
+          <div class="hero">
+            <div class="tag">今日学习节奏</div>
+            <strong>先整理 2 道新错题<br />再完成 ${state.stats.todayReview} 道复习</strong>
+            <p>把“拍照整理”和“每日复习”放在同一条路径上，减少用户流失。</p>
+          </div>
+
+          <div class="grid-2">
+            <div class="soft-card">
+              <span class="chip active">快捷入口</span>
+              <strong>去整理新错题</strong>
+              <p>从试卷中确认真正的错题，再进入识别与整理流程。</p>
+              <div class="action-row"><button class="primary-btn" data-action="go-capture">开始整理</button></div>
+            </div>
+            <div class="soft-card">
+              <span class="chip">今日复习</span>
+              <strong>${state.stats.todayReview} 道待完成</strong>
+              <p>系统根据记忆曲线推荐今天最值得先看的题。</p>
+              <div class="action-row"><button class="secondary-btn" data-action="go-review">去复习</button></div>
+            </div>
+            <div class="soft-card">
+              <span class="chip">掌握情况</span>
+              <strong>${state.stats.mastered} 道已掌握</strong>
+              <p>近 7 天整体掌握率稳定上升，数学提升最明显。</p>
+            </div>
+            <div class="soft-card">
+              <span class="chip">连续打卡</span>
+              <strong>${state.stats.streak} 天</strong>
+              <p>保持每天至少一次复习，会显著提升留存和学习效果。</p>
+            </div>
+          </div>
+
+          <div class="section-title">
+            <h4>最近整理的错题</h4>
+            <span>继续编辑或复习</span>
+          </div>
+          <div class="stack">
+            <div class="list-card" data-action="open-notebook">
+              <strong>数学 · 一元二次方程综合题</strong>
+              <p>错误类型：概念错误 / 审题错误。系统已提取公式并生成复习计划。</p>
+              <div class="tags">
+                <span class="chip active">待复习：今天</span>
+                <span class="chip">因式分解</span>
+                <span class="chip">根与系数</span>
+              </div>
+            </div>
+            <div class="list-card" data-action="go-similar">
+              <strong>英语 · 阅读理解易错句</strong>
+              <p>系统已为你匹配 3 道相似题，适合复习后继续巩固。</p>
+              <div class="tags">
+                <span class="chip">阅读理解</span>
+                <span class="chip active">可巩固</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCapture() {
+      const selected = state.captureSelected;
+      const hasManual = state.manualBox;
+      const count = selected.length + (hasManual ? 1 : 0);
+      return `
+        <div class="status-bar"><span>9:41</span><span>Wi-Fi · 88%</span></div>
+        <div class="screen-top">
+          <div>
+            <h3>确认真正的错题</h3>
+            <p>系统先给出候选框，你只保留需要整理的题目。</p>
+          </div>
+          <div class="badge">已选 ${count} 题</div>
+        </div>
+        <div class="screen-body">
+          <div class="preview-sheet">
+            <div class="preview-paper"></div>
+            ${candidateBox(1, 34, 56, 142, 88, selected.includes(1), "已确认错题", "selected")}
+            ${candidateBox(2, 228, 82, 136, 96, selected.includes(2), "候选题", "pending")}
+            ${candidateBox(3, 48, 222, 198, 82, selected.includes(3), "已确认错题", "selected")}
+            ${hasManual ? candidateBox(4, 252, 244, 100, 58, true, "手动补框", "manual") : ""}
+          </div>
+
+          <div class="chip-row">
+            <span class="chip active">绿色：确认后进入识别</span>
+            <span class="chip">黄色：仅候选，未确认</span>
+            <span class="chip">橙色：人工补框</span>
+          </div>
+
+          <div class="tool-row">
+            <button class="tool-btn" data-action="toggle-box-1">切换左上框</button>
+            <button class="tool-btn" data-action="toggle-box-2">切换右上框</button>
+            <button class="tool-btn" data-action="toggle-box-3">切换下方框</button>
+            <button class="tool-btn" data-action="toggle-manual">${hasManual ? "取消补框" : "模拟补框"}</button>
+          </div>
+
+          <div class="sheet-card" style="margin-top: 14px;">
+            <strong>为什么这一步是核心体验</strong>
+            <p>这里明确体现“识别错题，而不是识别整页所有题目”。自动切分只是候选结果，真正的入库对象由用户确认，能显著降低脏数据和无效识别成本。</p>
+          </div>
+
+          <div class="action-row">
+            <button class="secondary-btn" data-action="open-camera-sheet">更多操作</button>
+            <button class="primary-btn" data-action="continue-to-edit">确认并继续识别</button>
+          </div>
+        </div>
+        <div class="camera-sheet ${state.captureSheetOpen ? "active" : ""}">
+          <div class="sheet-handle"></div>
+          <strong>候选切分操作</strong>
+          <p>真机原型中用弹层模拟“删除误框、补框、重画框、保存草稿”等辅助操作。</p>
+          <div class="sheet-actions">
+            <button data-action="toggle-manual">补框</button>
+            <button data-action="show-draft">保存草稿</button>
+            <button class="warn" data-action="show-retake">返回重拍</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function candidateBox(id, left, top, width, height, selected, label, type) {
+      const cls = type === "manual" ? "manual" : (selected ? "selected" : "pending");
+      const text = type === "manual" ? "手动补框" : (selected ? "已确认错题" : "候选题");
+      return `
+        <button class="candidate ${cls}" data-action="toggle-box-${id}" style="left:${left}px;top:${top}px;width:${width}px;height:${height}px;">
+          <span class="candidate-label">${label || text}</span>
+        </button>
+      `;
+    }
+
+    function renderEdit() {
+      return `
+        <div class="status-bar"><span>9:41</span><span>5G · 86%</span></div>
+        <div class="screen-top">
+          <div>
+            <h3>错题整理确认</h3>
+            <p>系统已完成 OCR 和结构化预填，你可以直接修改后保存。</p>
+          </div>
+          <div class="badge">AI 预识别</div>
+        </div>
+        <div class="screen-body">
+          <div class="sheet-card">
+            <strong>预识别摘要</strong>
+            <p>已识别 1 道数学题，提取公式 1 处，推荐错误类型为“${state.errorType}”。</p>
+          </div>
+
+          <div class="form-stack" style="margin-top: 12px;">
+            <div class="field">
+              <label>题目内容</label>
+              <div class="value">已知方程 x² - 5x + 6 = 0，求其两个根，并判断哪一个根满足题目附加条件。</div>
+            </div>
+            <div class="field">
+              <label>公式识别</label>
+              <div class="value">x^2 - 5x + 6 = 0</div>
+            </div>
+            <div class="field">
+              <label>学科</label>
+              <div class="chip-row">
+                ${["数学", "英语", "物理"].map(item => `<button class="tab-chip chip ${state.subject === item ? "active" : ""}" data-action="set-subject" data-value="${item}">${item}</button>`).join("")}
+              </div>
+            </div>
+            <div class="field">
+              <label>错误类型</label>
+              <div class="chip-row">
+                ${["概念错误", "计算错误", "审题错误"].map(item => `<button class="tab-chip chip ${state.errorType === item ? "active" : ""}" data-action="set-error" data-value="${item}">${item}</button>`).join("")}
+              </div>
+            </div>
+            <div class="field">
+              <label>知识点</label>
+              <div class="chip-row">
+                <span class="chip active">一元二次方程</span>
+                <span class="chip active">因式分解</span>
+                <span class="chip">根与系数关系</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button class="secondary-btn" data-action="go-capture">返回调整框选</button>
+            <button class="primary-btn" data-action="save-note">保存到错题本</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderNotebook() {
+      return `
+        <div class="status-bar"><span>9:41</span><span>Wi-Fi · 84%</span></div>
+        <div class="screen-top">
+          <div>
+            <h3>错题本</h3>
+            <p>按学科、知识点和错误类型回看你的历史错题。</p>
+          </div>
+          <div class="badge">共 ${state.stats.total} 题</div>
+        </div>
+        <div class="screen-body">
+          <div class="chip-row">
+            <span class="chip active">全部</span>
+            <span class="chip">数学</span>
+            <span class="chip">英语</span>
+            <span class="chip">概念错误</span>
+          </div>
+
+          <div class="stack" style="margin-top: 14px;">
+            <div class="list-card" data-action="open-detail-sheet">
+              <strong>数学 · 函数图像判断题</strong>
+              <p>下次复习：今天 20:30。建议继续巩固图像变化趋势。</p>
+              <div class="tags">
+                <span class="chip active">待复习</span>
+                <span class="chip">函数图像</span>
+                <span class="chip">几何结合</span>
+              </div>
+            </div>
+            <div class="list-card" data-action="go-similar">
+              <strong>英语 · 完形填空高频错题</strong>
+              <p>建议搭配 3 道相似题继续巩固，提升语义判断稳定性。</p>
+              <div class="tags">
+                <span class="chip">完形填空</span>
+                <span class="chip active">可巩固</span>
+              </div>
+            </div>
+            <div class="list-card">
+              <strong>物理 · 电路图判断题</strong>
+              <p>图题保留原图和结构化说明，首期先保证可整理、可回看。</p>
+              <div class="tags">
+                <span class="chip">图题</span>
+                <span class="chip">串并联</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-sheet ${state.detailSheetOpen ? "active" : ""}">
+          <div class="sheet-handle"></div>
+          <strong>错题详情预览</strong>
+          <p>这里模拟错题详情弹层，可继续编辑、开始复习，或直接查看相似题巩固。</p>
+          <div class="sheet-actions">
+            <button data-action="go-edit">继续编辑</button>
+            <button class="primary" data-action="go-review">去复习</button>
+            <button class="warn" data-action="go-similar">相似题</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderReview() {
+      return `
+        <div class="status-bar"><span>9:41</span><span>5G · 85%</span></div>
+        <div class="screen-top">
+          <div>
+            <h3>今日复习</h3>
+            <p>按记忆曲线安排，先复习最容易再次遗忘的题。</p>
+          </div>
+          <div class="badge">${state.stats.todayReview} 题待完成</div>
+        </div>
+        <div class="screen-body">
+          <div class="hero" style="background: linear-gradient(135deg, #20435d 0%, #1c6c69 100%);">
+            <div class="tag">复习任务</div>
+            <strong>今天建议先完成<br />15 分钟错题回看</strong>
+            <p>点击任意题目卡片，模拟“掌握 / 未掌握 / 再次出错”的真机反馈流程。</p>
+          </div>
+
+          <div class="section-title">
+            <h4>待复习列表</h4>
+            <span>按优先级排序</span>
+          </div>
+
+          <div class="review-list">
+            ${reviewRow("math1", "数", "二次函数最值题", "第 3 次复习 · 上次仍有错误")}
+            ${reviewRow("eng1", "英", "阅读理解定位句判断", "第 2 次复习 · 建议做相似题")}
+            ${reviewRow("geo1", "数", "几何辅助线判断", "图题建议结合原图回看")}
+          </div>
+        </div>
+        <div class="feedback-sheet ${state.reviewSheetOpen ? "active" : ""}">
+          <div class="sheet-handle"></div>
+          <strong>复习结果反馈</strong>
+          <p>${state.activeReview ? `正在反馈：${state.activeReview}` : "完成一道题后记录掌握情况，系统会自动调整下次复习时间。"}</p>
+          <div class="sheet-actions">
+            <button data-action="feedback-mastered" class="primary">已掌握</button>
+            <button data-action="feedback-later">还需复习</button>
+            <button data-action="feedback-wrong" class="warn">再次出错</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function reviewRow(id, badge, title, desc) {
+      return `
+        <button class="review-row" data-action="open-review-sheet" data-id="${title}">
+          <div class="review-badge">${badge}</div>
+          <div>
+            <strong>${title}</strong>
+            <p>${desc}</p>
+          </div>
+          <div class="mini-btn">开始</div>
+        </button>
+      `;
+    }
+
+    function renderProfile() {
+      return `
+        <div class="status-bar"><span>9:41</span><span>Wi-Fi · 82%</span></div>
+        <div class="screen-top">
+          <div>
+            <h3>我的学习</h3>
+            <p>查看错题规模、复习连续性和当前学习偏好。</p>
+          </div>
+          <div class="badge">连续 ${state.stats.streak} 天</div>
+        </div>
+        <div class="screen-body">
+          <div class="profile-grid">
+            <div class="profile-card">
+              <strong>本周学习概览</strong>
+              <p>新增错题 18 道，完成复习 24 次，数学仍是最高频使用科目。</p>
+              <div class="tags">
+                <span class="chip active">新增 18</span>
+                <span class="chip">复习 24</span>
+                <span class="chip">掌握率 68%</span>
+              </div>
+            </div>
+            <div class="profile-card">
+              <strong>学科偏好</strong>
+              <p>当前系统优先推荐数学和英语相关内容，后续可根据年级调整策略。</p>
+              <div class="tags">
+                <span class="chip active">数学</span>
+                <span class="chip">英语</span>
+              </div>
+            </div>
+            <div class="empty-state">
+              <strong>这部分更适合后续增强</strong>
+              <p>如家长视角、学习趋势图、个性化推荐说明等，可以在下一版继续扩展。</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderBottomBar() {
+      const tab = (key, label, cls = "") => `<button class="tab-btn ${state.route === key ? "active" : ""} ${cls}" data-action="route" data-value="${key}">${label}</button>`;
+      return `
+        <div class="bottombar">
+          ${tab("home", "首页")}
+          ${tab("notebook", "错题本")}
+          ${tab("capture", "拍照整理", "capture")}
+          ${tab("review", "复习")}
+          ${tab("profile", "我的")}
+        </div>
+      `;
+    }
+
+    function renderRoute() {
+      switch (state.route) {
+        case "capture": return renderCapture();
+        case "edit": return renderEdit();
+        case "notebook": return renderNotebook();
+        case "review": return renderReview();
+        case "profile": return renderProfile();
+        default: return renderHome();
+      }
+    }
+
+    function render() {
+      app.innerHTML = renderRoute() + renderBottomBar();
+      pageDesc.textContent = routeDescription[state.route];
+      journeyButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.route === state.route));
+      updateStorySteps();
+    }
+
+    function toggleCapture(id) {
+      const exists = state.captureSelected.includes(id);
+      if (exists) {
+        state.captureSelected = state.captureSelected.filter((item) => item !== id);
+      } else {
+        state.captureSelected = [...state.captureSelected, id];
+      }
+      render();
+    }
+
+    document.addEventListener("click", (event) => {
+      const actionNode = event.target.closest("[data-action]");
+      if (!actionNode) return;
+      const action = actionNode.dataset.action;
+      const value = actionNode.dataset.value;
+
+      if (action === "route") setRoute(value);
+      if (action === "go-capture") setRoute("capture");
+      if (action === "go-review") setRoute("review");
+      if (action === "go-edit") setRoute("edit");
+      if (action === "go-similar") {
+        setRoute("notebook");
+        state.detailSheetOpen = false;
+        showToast("已切到相似题演示卡片，可继续扩展为独立页面");
+      }
+      if (action === "open-notebook") setRoute("notebook");
+      if (action === "toggle-box-1") toggleCapture(1);
+      if (action === "toggle-box-2") toggleCapture(2);
+      if (action === "toggle-box-3") toggleCapture(3);
+      if (action === "toggle-box-4") toggleCapture(4);
+      if (action === "toggle-manual") {
+        state.manualBox = !state.manualBox;
+        if (!state.manualBox) {
+          state.captureSelected = state.captureSelected.filter((item) => item !== 4);
+        } else if (!state.captureSelected.includes(4)) {
+          state.captureSelected.push(4);
+        }
+        render();
+      }
+      if (action === "open-camera-sheet") {
+        state.captureSheetOpen = !state.captureSheetOpen;
+        render();
+      }
+      if (action === "show-draft") showToast("已保存为框选草稿");
+      if (action === "show-retake") showToast("真机版中这里可返回拍照页");
+      if (action === "continue-to-edit") {
+        const count = state.captureSelected.length + (state.manualBox ? 1 : 0);
+        if (count === 0) {
+          showToast("请先确认至少一道错题");
+        } else {
+          setRoute("edit");
+          showToast(`已确认 ${count} 道错题，开始识别`);
+        }
+      }
+      if (action === "set-subject") {
+        state.subject = value;
+        render();
+      }
+      if (action === "set-error") {
+        state.errorType = value;
+        render();
+      }
+      if (action === "save-note") {
+        state.stats.total += 1;
+        setRoute("notebook");
+        showToast("已保存到错题本，并自动生成复习计划");
+      }
+      if (action === "open-detail-sheet") {
+        state.detailSheetOpen = true;
+        render();
+      }
+      if (action === "open-review-sheet") {
+        state.reviewSheetOpen = true;
+        state.activeReview = actionNode.dataset.id;
+        render();
+      }
+      if (action === "feedback-mastered") {
+        state.reviewSheetOpen = false;
+        state.stats.todayReview = Math.max(0, state.stats.todayReview - 1);
+        render();
+        showToast("已标记为掌握，系统会延后下次复习时间");
+      }
+      if (action === "feedback-later") {
+        state.reviewSheetOpen = false;
+        render();
+        showToast("已标记为还需复习，明天会继续提醒");
+      }
+      if (action === "feedback-wrong") {
+        state.reviewSheetOpen = false;
+        render();
+        showToast("已标记为再次出错，建议马上做相似题巩固");
+      }
+    });
+
+    journeyButtons.forEach((btn) => {
+      btn.addEventListener("click", () => setRoute(btn.dataset.route));
+    });
+
+    render();
+  </script>
+</body>
+</html>
